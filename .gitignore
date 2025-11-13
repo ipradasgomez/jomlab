@@ -1,1 +1,8 @@
 .env
+
+# Traefik certificates
+data/traefik/letsencrypt/acme.json
+
+# Docker volumes data
+data/**/*
+!data/**/.gitkeep

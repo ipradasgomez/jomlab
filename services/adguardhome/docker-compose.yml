@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  adguardhome:
+    image: adguard/adguardhome:latest
+    container_name: adguardhome
+    restart: unless-stopped
+    networks:
+      - entry
+    volumes:
+      - ../../data/adguardhome/work:/opt/adguardhome/work
+      - ../../data/adguardhome/conf:/opt/adguardhome/conf
+    ports:
+      - "${ADGUARD_DNS_IP:-192.168.0.100}:53:53/tcp"
+      - "${ADGUARD_DNS_IP:-192.168.0.100}:53:53/udp"
+      - "${ADGUARD_DHCP_SERVER_PORT:-67}:67/udp"
+      - "${ADGUARD_DHCP_CLIENT_PORT:-68}:68/udp"
+      - "${ADGUARD_HTTP_PORT:-8050}:80/tcp"
+      - "${ADGUARD_HTTPS_PORT:-4430}:443/tcp"
+      - "${ADGUARD_HTTPS_PORT:-4430}:443/udp"
+      - "${ADGUARD_ADMIN_PORT:-3000}:3000/tcp"
+      - "${ADGUARD_DOT_PORT:-853}:853/tcp"
+      - "${ADGUARD_DOT_PORT:-853}:853/udp"
+      - "${ADGUARD_DOH_PORT:-784}:784/udp"
+      - "${ADGUARD_QUIC_PORT:-8853}:8853/udp"
+      - "${ADGUARD_TLS_PORT:-5443}:5443/tcp"
+      - "${ADGUARD_TLS_PORT:-5443}:5443/udp"
+    env_file:
+      - ../../.env
+    # La configuración de Traefik está en traefik/config/dynamic/adguardhome.yml
+    # No necesitamos labels aquí, todo se gestiona desde los archivos dynamic
+
+networks:
+  entry:
+    name: entry
+    external: true
+

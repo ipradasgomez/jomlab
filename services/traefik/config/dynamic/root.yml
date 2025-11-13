@@ -1,0 +1,22 @@
+# Configuración para el dominio raíz tekkisma.es
+# Muestra una página simple con "Tekkisma" centrado
+
+http:
+  routers:
+    root:
+      rule: "Host(`tekkisma.es`)"
+      entryPoints:
+        - websecure
+      service: root-page
+      tls:
+        certResolver: cloudflare
+      middlewares:
+        - error-handler  # Middleware aplicado automáticamente a routers Docker, necesario aquí para routers YAML
+      priority: 10  # Prioridad alta para que tenga precedencia sobre el catch-all
+
+  services:
+    root-page:
+      loadBalancer:
+        servers:
+          - url: "http://root-page:80"
+

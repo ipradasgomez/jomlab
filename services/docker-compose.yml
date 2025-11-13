@@ -1,0 +1,23 @@
+version: '3.8'
+
+# Docker Compose común para configuraciones compartidas
+# Este archivo define redes y otros recursos comunes para todos los servicios
+# El servicio dummy solo existe para que Docker Compose pueda crear la red
+
+services:
+  network-dummy:
+    image: alpine:latest
+    container_name: network-dummy
+    command: sleep infinity
+    env_file:
+      - ../.env
+    networks:
+      - entry
+    restart: "no"
+
+networks:
+  entry:
+    name: entry
+    driver: bridge
+    external: false
+

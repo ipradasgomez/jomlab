@@ -1,0 +1,24 @@
+# Configuración de Cloudflare Tunnel
+# Este archivo define las reglas de ingress para enrutar el tráfico desde Cloudflare a Traefik
+#
+# IMPORTANTE: Reemplaza "tu-dominio.com" con tu dominio real (el mismo que tienes en MAIN_DOMAIN)
+
+ingress:
+  # Dominio raíz: tekkisma.es
+  - hostname: "tekkisma.es"
+    service: https://traefik:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: "tekkisma.es"
+  
+  # Regla wildcard: todos los subdominios de tu dominio van a Traefik
+  # Traefik se encargará del enrutamiento interno basado en el hostname
+  - hostname: "*.tekkisma.es"
+    service: https://traefik:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: "*.tekkisma.es"
+
+  # Regla por defecto: devolver 404 para cualquier otra petición
+  - service: http_status:404
+
