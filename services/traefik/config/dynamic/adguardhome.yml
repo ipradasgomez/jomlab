@@ -1,0 +1,23 @@
+# Configuración de AdGuard Home
+# El middleware error-handler debe aplicarse explícitamente porque este router está en un archivo YAML
+
+http:
+  routers:
+    adguard:
+      rule: "Host(`adguard.tekkisma.es`)"
+      entryPoints:
+        - websecure
+      service: adguard
+      tls:
+        certResolver: cloudflare
+        options: default
+      middlewares:
+        - error-handler  # Necesario para routers definidos en archivos YAML
+      priority: 10  # Prioridad alta para que tenga precedencia sobre el catch-all
+
+  services:
+    adguard:
+      loadBalancer:
+        servers:
+          - url: "http://adguardhome:80"
+

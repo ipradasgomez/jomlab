@@ -1,0 +1,32 @@
+http:
+  middlewares:
+    error-handler:
+      errors:
+        status:
+          - "404"
+          - "500-599"
+        service: error-page
+        query: "/"
+
+  routers:
+    catch-all-404:
+      rule: "HostRegexp(`{subdomain:.+}.tekkisma.es`)"
+      entryPoints:
+        - websecure
+      service: error-page
+      tls:
+        certResolver: cloudflare
+      priority: 1  # Prioridad muy baja, solo se aplica si no hay otros routers
+
+  # Servicio para la página de error
+  services:
+    error-page:
+      loadBalancer:
+        servers:
+          - url: "http://error-page:80"
+        healthCheck:
+          path: /
+          interval: "10s"
+          timeout: "3s"
+          scheme: http
+

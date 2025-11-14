@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  root-page:
+    image: nginx:alpine
+    container_name: root-page
+    restart: unless-stopped
+    command: >
+      sh -c "
+      echo '<!DOCTYPE html>
+      <html>
+      <head>
+          <meta charset=\"UTF-8\">
+          <title>Tekkisma</title>
+          <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              html, body { height: 100%; }
+              body {
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  color: white;
+              }
+              h1 {
+                  font-size: 4rem;
+                  font-weight: 300;
+                  letter-spacing: 0.1em;
+                  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+              }
+          </style>
+      </head>
+      <body>
+          <h1>Tekkisma</h1>
+      </body>
+      </html>' > /usr/share/nginx/html/index.html &&
+      nginx -g 'daemon off;'
+      "
+    networks:
+      - entry
+
+networks:
+  entry:
+    name: entry
+    external: true
+
