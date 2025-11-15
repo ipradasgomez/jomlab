@@ -33,7 +33,6 @@ http:
         options: default
       priority: 200 # Prioridad alta para el dashboard de Authentik
 
-    # Router para outpost en auth.tekkisma.es
     authentik-outpost:
       rule: "Host(`auth.tekkisma.es`) && PathPrefix(`/outpost.goauthentik.io/`)"
       entryPoints:
@@ -43,18 +42,6 @@ http:
         certResolver: cloudflare
         options: default
       priority: 201 # Mayor prioridad para el outpost
-
-    # Router global para rutas del outpost en CUALQUIER subdominio
-    # Esto evita bucles de redirección y permite que el login se maneje centralmente
-    authentik-outpost-global:
-      rule: "HostRegexp(`{subdomain:.+}.tekkisma.es`) && PathPrefix(`/outpost.goauthentik.io/`)"
-      entryPoints:
-        - websecure
-      service: authentik-server
-      tls:
-        certResolver: cloudflare
-        options: default
-      priority: 250 # Prioridad muy alta para capturar antes que otros routers
 
     # Router para assets estáticos de Authentik
     authentik-static:
