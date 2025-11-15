@@ -24,8 +24,15 @@ Datos persistentes de servicios. Cada servicio tiene su subdirectorio.
 **Estructura**:
 ```
 data/
+├── storage/             # Datos de servicios compartidos
+│   ├── postgresql/      # Datos de PostgreSQL compartido
+│   └── redis/           # Datos de Redis compartido
 ├── traefik/
 │   └── letsencrypt/     # Certificados SSL
+├── authentik/
+│   ├── media/
+│   ├── certs/
+│   └── custom-templates/
 ├── adguardhome/
 │   ├── work/
 │   └── conf/
@@ -66,28 +73,35 @@ Contenedor de todos los servicios Docker.
 ```
 services/
 ├── docker-compose.yml      # Red común 'entry'
+├── storage-postgresql.yml  # PostgreSQL compartido
+├── storage-redis.yml       # Redis compartido
+├── traefik.yml            # Docker Compose para Traefik
+├── cloudflared.yml        # Docker Compose para Cloudflared
+├── authentik.yml          # Docker Compose para Authentik
+├── root-page.yml          # Docker Compose para root-page
+├── whoami.yml             # Docker Compose para whoami
+├── ...
+├── .env                   # Variables de entorno (copiado desde raíz)
 ├── traefik/
-│   ├── docker-compose.yml
 │   ├── config/
 │   │   ├── traefik.yml
 │   │   └── dynamic/
 │   └── README.md
 ├── cloudflared/
-│   ├── docker-compose.yml
 │   ├── config.yml
 │   └── README.md
 └── <servicio>/
-    ├── docker-compose.yml
-    └── <archivos>/
+    └── <archivos de configuración>/
 ```
 
 **Reglas**:
-- Un directorio por servicio
-- `docker-compose.yml` en cada servicio
-- `env_file: - ../../.env` obligatorio
+- Un directorio por servicio para configuraciones
+- `docker-compose.yml` en `services/` con nombre `<servicio>.yml`
+- `env_file: - ./.env` (el .env está en services/)
 - Red `entry` externa para servicios expuestos
 - Configuración local en el directorio del servicio
-- Datos persistentes apuntan a `../../data/<servicio>/`
+- Datos persistentes apuntan a `../data/<servicio>/`
+- Uso: `docker compose -f <servicio>.yml up -d` desde `services/`
 
 ### `rules/`
 Reglas y documentación para Cursor AI. No mover a `documentation/`.
@@ -105,17 +119,21 @@ Reglas y documentación para Cursor AI. No mover a `documentation/`.
 
 ### Variables de Entorno
 - `.env` en la raíz (no versionado)
+- `.env` copiado en `services/` para carga automática por docker-compose
 - `env.example` como plantilla
-- Servicios usan `env_file: - ../../.env`
+- Servicios usan `env_file: - ./.env` (desde services/)
 
 ### Redes Docker
 - `entry`: Red de entrada (Traefik, Cloudflared, servicios expuestos)
+- `storage`: Red de almacenamiento (PostgreSQL, Redis compartidos)
 - Servicios pueden tener redes propias si no necesitan exposición
+- Servicios que usan almacenamiento deben estar en ambas redes: `entry` y `storage`
 
 ### Rutas
-- Relativas desde el directorio del servicio
-- `../../data/<servicio>/` para datos persistentes
-- `../../.env` para variables de entorno
+- Relativas desde `services/` para docker-compose
+- `../data/<servicio>/` para datos persistentes
+- `./<servicio>/config/` para configuraciones del servicio
+- `./.env` para variables de entorno
 
 ## Ejemplo: Añadir un Servicio
 
@@ -124,7 +142,7 @@ Reglas y documentación para Cursor AI. No mover a `documentation/`.
    mkdir -p services/mi-servicio
    ```
 
-2. **Crear docker-compose.yml**:
+2. **Crear docker-compose.yml en services/**:
    ```yaml
    version: '3.8'
    services:
@@ -135,14 +153,16 @@ Reglas y documentación para Cursor AI. No mover a `documentation/`.
        networks:
          - entry
        env_file:
-         - ../../.env
+         - ./.env
        volumes:
-         - ../../data/mi-servicio:/data
+         - ../data/mi-servicio:/data
    networks:
      entry:
        name: entry
        external: true
    ```
+   
+   Guardar como `services/mi-servicio.yml`
 
 3. **Crear directorio de datos**:
    ```bash
@@ -155,8 +175,8 @@ Reglas y documentación para Cursor AI. No mover a `documentation/`.
 
 5. **Iniciar**:
    ```bash
-   cd services/mi-servicio
-   docker compose up -d
+   cd services
+   docker compose -f mi-servicio.yml up -d
    ```
 
 ## Notas Importantes

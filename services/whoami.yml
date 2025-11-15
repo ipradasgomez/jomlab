@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  whoami:
+    image: traefik/whoami:latest
+    container_name: whoami
+    restart: unless-stopped
+    networks:
+      - entry
+    labels:
+      - "traefik.enable=true"
+
+networks:
+  entry:
+    name: entry
+    external: true
+

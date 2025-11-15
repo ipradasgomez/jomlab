@@ -4,13 +4,13 @@ services:
     container_name: cloudflared
     restart: unless-stopped
     env_file:
-      - ../../.env
+      - ./.env
     environment:
       # Cloudflared espera TUNNEL_TOKEN, mapeamos desde CLOUDFLARE_TUNNEL_TOKEN
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     volumes:
       # Montar el archivo de configuración
-      - ./config.yml:/etc/cloudflared/config.yml:ro
+      - ./cloudflared/config.yml:/etc/cloudflared/config.yml:ro
     command: tunnel --no-autoupdate --edge-ip-version auto --config /etc/cloudflared/config.yml run
     networks:
       - entry

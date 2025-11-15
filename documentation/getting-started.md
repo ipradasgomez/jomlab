@@ -111,8 +111,8 @@ nano .env
 Luego reinicia Traefik para aplicar los cambios:
 
 ```bash
-cd services/traefik
-docker compose restart
+cd services
+docker compose -f traefik.yml restart
 ```
 
 **Nota**: Este paso es opcional. Si no configuras autenticación, el dashboard seguirá funcionando pero sin protección (solo accesible localmente en el puerto 8080).
@@ -152,32 +152,26 @@ cd services
 docker network inspect entry >/dev/null 2>&1 || docker network create entry
 
 # Iniciar Cloudflared primero
-cd cloudflared
-docker compose up -d
+docker compose -f cloudflared.yml up -d
 
 # Luego iniciar Traefik
-cd ../traefik
-docker compose up -d
+docker compose -f traefik.yml up -d
 ```
 
 ## Detener Servicios
 
 ```bash
-cd services/traefik
-docker compose down
-
-cd ../cloudflared
-docker compose down
+cd services
+docker compose -f traefik.yml down
+docker compose -f cloudflared.yml down
 ```
 
 ## Reiniciar Servicios
 
 ```bash
-cd services/cloudflared
-docker compose restart
-
-cd ../traefik
-docker compose restart
+cd services
+docker compose -f cloudflared.yml restart
+docker compose -f traefik.yml restart
 ```
 
 ## Troubleshooting

@@ -31,15 +31,12 @@ services:
       - "${TRAEFIK_HTTPS_PORT:-443}:443"
       - "8080:8080"  # Dashboard local (no expuesto públicamente)
     volumes:
-      - ./config:/etc/traefik:ro
-      - ../../data/traefik/letsencrypt:/letsencrypt
+      - ./traefik/config:/etc/traefik:ro
+      - ../data/traefik/letsencrypt:/letsencrypt
     env_file:
-      - ../../.env
+      - ./.env
     environment:
       - TZ=${TZ:-UTC}
-      - CF_API_EMAIL=${CF_API_EMAIL}
-      - CF_API_KEY=${CF_API_KEY}
-      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
     networks:
       - entry
     depends_on:
@@ -58,7 +55,7 @@ services:
     container_name: socket-proxy
     restart: unless-stopped
     env_file:
-      - ../../.env
+      - ./.env
     networks:
       - entry
     environment:

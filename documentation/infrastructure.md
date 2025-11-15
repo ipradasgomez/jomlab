@@ -14,14 +14,14 @@ Internet → Cloudflare → Cloudflare Tunnel → Traefik → Servicios
 - Cliente que crea un túnel seguro hacia Cloudflare
 - No requiere abrir puertos en el router
 - Tráfico cifrado end-to-end
-- Ubicación: `services/cloudflared/`
+- Ubicación: `services/cloudflared.yml` (docker-compose) y `services/cloudflared/` (configuraciones)
 
 **Traefik**
 - Reverse proxy que gestiona el enrutamiento
 - Terminación SSL/TLS
 - Descubrimiento automático de servicios (cuando funciona)
 - Configuración estática en `config/dynamic/` como fallback
-- Ubicación: `services/traefik/`
+- Ubicación: `services/traefik.yml` (docker-compose) y `services/traefik/` (configuraciones)
 
 ## Flujo de Tráfico
 
@@ -63,7 +63,7 @@ El script configura:
    ACME_EMAIL=tu-email@example.com
    ```
 
-3. **Configurar `services/cloudflared/config.yml`**:
+3. **Configurar `services/cloudflared/config.yml`** (ya existe, solo verificar):
    ```yaml
    ingress:
      - hostname: "*.tu-dominio.com"
@@ -78,8 +78,8 @@ El script configura:
    ```bash
    cd services
    docker network inspect entry >/dev/null 2>&1 || docker network create entry
-   cd cloudflared && docker compose up -d
-   cd ../traefik && docker compose up -d
+   docker compose -f cloudflared.yml up -d
+   docker compose -f traefik.yml up -d
    ```
 
 ## Configuración DNS
@@ -135,14 +135,17 @@ http:
 
 ### Opción 2: Labels Docker (si el provider funciona)
 
-En `docker-compose.yml` del servicio:
+En `<servicio>.yml` del servicio (en `services/`):
 ```yaml
-labels:
-  - "traefik.enable=true"
-  - "traefik.http.routers.servicio.rule=Host(`servicio.dominio.com`)"
-  - "traefik.http.routers.servicio.entrypoints=websecure"
-  - "traefik.http.routers.servicio.tls.certresolver=cloudflare"
-  - "traefik.http.services.servicio.loadbalancer.server.port=80"
+services:
+  servicio:
+    # ... configuración del servicio ...
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.servicio.rule=Host(`servicio.dominio.com`)"
+      - "traefik.http.routers.servicio.entrypoints=websecure"
+      - "traefik.http.routers.servicio.tls.certresolver=cloudflare"
+      - "traefik.http.services.servicio.loadbalancer.server.port=80"
 ```
 
 ## Troubleshooting

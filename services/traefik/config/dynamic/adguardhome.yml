@@ -13,6 +13,7 @@ http:
         options: default
       middlewares:
         - error-handler  # Necesario para routers definidos en archivos YAML
+        - authentik-forward-auth  # Autenticación para subdominios
       priority: 10  # Prioridad alta para que tenga precedencia sobre el catch-all
 
   services:
