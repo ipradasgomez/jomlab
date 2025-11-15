@@ -8,8 +8,8 @@ services:
     networks:
       - entry
     volumes:
-      - ../../data/adguardhome/work:/opt/adguardhome/work
-      - ../../data/adguardhome/conf:/opt/adguardhome/conf
+      - ../data/adguardhome/work:/opt/adguardhome/work
+      - ../data/adguardhome/conf:/opt/adguardhome/conf
     ports:
       - "${ADGUARD_DNS_IP:-192.168.0.100}:53:53/tcp"
       - "${ADGUARD_DNS_IP:-192.168.0.100}:53:53/udp"
@@ -26,7 +26,7 @@ services:
       - "${ADGUARD_TLS_PORT:-5443}:5443/tcp"
       - "${ADGUARD_TLS_PORT:-5443}:5443/udp"
     env_file:
-      - ../../.env
+      - ./.env
     # La configuración de Traefik está en traefik/config/dynamic/adguardhome.yml
     # No necesitamos labels aquí, todo se gestiona desde los archivos dynamic
 

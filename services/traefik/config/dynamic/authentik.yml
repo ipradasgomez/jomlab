@@ -1,0 +1,75 @@
+# Configuración de Authentik para Traefik
+# Middleware de forwardAuth que se aplica a subdominios (no al dominio raíz)
+
+http:
+  middlewares:
+    authentik-forward-auth:
+      forwardAuth:
+        address: http://authentik-server:9000/outpost.goauthentik.io/auth/traefik
+        authResponseHeadersRegex: ^X-authentik-.*
+        trustForwardHeader: true
+        authResponseHeaders:
+          - X-authentik-username
+          - X-authentik-groups
+          - X-authentik-entitlements
+          - X-authentik-email
+          - X-authentik-name
+          - X-authentik-uid
+          - X-authentik-jwt
+          - X-authentik-meta-jwks
+          - X-authentik-meta-outpost
+          - X-authentik-meta-provider
+          - X-authentik-meta-app
+          - X-authentik-meta-version
+
+  routers:
+    authentik:
+      rule: "Host(`auth.tekkisma.es`)"
+      entryPoints:
+        - websecure
+      service: authentik-server
+      tls:
+        certResolver: cloudflare
+        options: default
+      priority: 200 # Prioridad alta para el dashboard de Authentik
+
+    # Router para outpost en auth.tekkisma.es
+    authentik-outpost:
+      rule: "Host(`auth.tekkisma.es`) && PathPrefix(`/outpost.goauthentik.io/`)"
+      entryPoints:
+        - websecure
+      service: authentik-server
+      tls:
+        certResolver: cloudflare
+        options: default
+      priority: 201 # Mayor prioridad para el outpost
+
+    # Router global para rutas del outpost en CUALQUIER subdominio
+    # Esto evita bucles de redirección y permite que el login se maneje centralmente
+    authentik-outpost-global:
+      rule: "HostRegexp(`{subdomain:.+}.tekkisma.es`) && PathPrefix(`/outpost.goauthentik.io/`)"
+      entryPoints:
+        - websecure
+      service: authentik-server
+      tls:
+        certResolver: cloudflare
+        options: default
+      priority: 250 # Prioridad muy alta para capturar antes que otros routers
+
+    # Router para assets estáticos de Authentik
+    authentik-static:
+      rule: "Host(`auth.tekkisma.es`) && PathPrefix(`/static/`)"
+      entryPoints:
+        - websecure
+      service: authentik-server
+      tls:
+        certResolver: cloudflare
+        options: default
+      priority: 202 # Mayor prioridad para assets estáticos
+
+  services:
+    authentik-server:
+      loadBalancer:
+        servers:
+          - url: "http://authentik-server:9000"
+

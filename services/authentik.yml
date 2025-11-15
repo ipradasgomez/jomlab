@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  server:
+    image: ${AUTHENTIK_IMAGE:-authentik/server}:${AUTHENTIK_TAG:-2025.10.1}
+    container_name: authentik-server
+    restart: unless-stopped
+    command: server
+    environment:
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_POSTGRESQL__HOST: storage-postgresql
+      AUTHENTIK_POSTGRESQL__USER: ${POSTGRES_USER:-postgres}
+      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD}
+      AUTHENTIK_REDIS__HOST: storage-redis
+      AUTHENTIK_REDIS__PASSWORD: ${REDIS_PASSWORD}
+      AUTHENTIK_ERROR_REPORTING__ENABLED: ${AUTHENTIK_ERROR_REPORTING__ENABLED:-false}
+      # Email configuration (opcional)
+      AUTHENTIK_EMAIL__HOST: ${AUTHENTIK_EMAIL__HOST:-}
+      AUTHENTIK_EMAIL__FROM: ${AUTHENTIK_EMAIL__FROM:-}
+      AUTHENTIK_EMAIL__USERNAME: ${AUTHENTIK_EMAIL__USERNAME:-}
+      AUTHENTIK_EMAIL__PASSWORD: ${AUTHENTIK_EMAIL__PASSWORD:-}
+      AUTHENTIK_EMAIL__USE_TLS: ${AUTHENTIK_EMAIL__USE_TLS:-true}
+      AUTHENTIK_EMAIL__USE_SSL: ${AUTHENTIK_EMAIL__USE_SSL:-false}
+      AUTHENTIK_EMAIL__PORT: ${AUTHENTIK_EMAIL__PORT:-587}
+    volumes:
+      - ../data/authentik/media:/media
+      - ../data/authentik/custom-templates:/templates
+    env_file:
+      - ./.env
+    networks:
+      - entry
+      - storage
+    # Nota: storage-postgresql y storage-redis deben estar corriendo
+    # Iniciarlos primero con: docker compose -f storage-postgresql.yml up -d
+    # y: docker compose -f storage-redis.yml up -d
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authentik.rule=Host(`auth.${MAIN_DOMAIN}`)"
+      - "traefik.http.routers.authentik.entrypoints=websecure"
+      - "traefik.http.routers.authentik.tls.certresolver=cloudflare"
+      - "traefik.http.routers.authentik.service=authentik-server"
+      - "traefik.http.services.authentik-server.loadbalancer.server.port=9000"
+      # Ruta para el outpost
+      - "traefik.http.routers.authentik-outpost.rule=Host(`auth.${MAIN_DOMAIN}`) && PathPrefix(`/outpost.goauthentik.io/`)"
+      - "traefik.http.routers.authentik-outpost.entrypoints=websecure"
+      - "traefik.http.routers.authentik-outpost.tls.certresolver=cloudflare"
+      - "traefik.http.routers.authentik-outpost.service=authentik-outpost"
+      - "traefik.http.services.authentik-outpost.loadbalancer.server.port=9000"
+
+  worker:
+    image: ${AUTHENTIK_IMAGE:-authentik/server}:${AUTHENTIK_TAG:-2025.10.1}
+    container_name: authentik-worker
+    restart: unless-stopped
+    command: worker
+    environment:
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_POSTGRESQL__HOST: storage-postgresql
+      AUTHENTIK_POSTGRESQL__USER: ${POSTGRES_USER:-postgres}
+      AUTHENTIK_POSTGRESQL__NAME: ${AUTHENTIK_PG_DB:-authentik}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD}
+      AUTHENTIK_REDIS__HOST: storage-redis
+      AUTHENTIK_REDIS__PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - ../data/authentik/media:/media
+      - ../data/authentik/certs:/certs
+      - ../data/authentik/custom-templates:/templates
+    env_file:
+      - ./.env
+    networks:
+      - entry
+      - storage
+    depends_on:
+      - server
+
+networks:
+  entry:
+    name: entry
+    external: true
+  storage:
+    name: storage
+    external: true
+

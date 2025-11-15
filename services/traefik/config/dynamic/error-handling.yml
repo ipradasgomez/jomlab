@@ -16,6 +16,8 @@ http:
       service: error-page
       tls:
         certResolver: cloudflare
+      middlewares:
+        - authentik-forward-auth  # Aplicar autenticación a todos los subdominios no configurados
       priority: 1  # Prioridad muy baja, solo se aplica si no hay otros routers
 
   # Servicio para la página de error

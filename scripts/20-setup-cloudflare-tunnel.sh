@@ -226,13 +226,11 @@ cd "$PROJECT_ROOT/services"
 docker network inspect entry >/dev/null 2>&1 || docker network create entry
 
 # Iniciar Cloudflared primero (el túnel debe estar listo antes que Traefik)
-cd cloudflared
-docker compose up -d >/dev/null 2>&1 || docker-compose up -d >/dev/null 2>&1
+docker compose -f cloudflared.yml up -d >/dev/null 2>&1 || docker-compose -f cloudflared.yml up -d >/dev/null 2>&1
 echo -e "${GREEN}✓ Cloudflared iniciado${NC}"
 
 # Iniciar Traefik después (se conecta al túnel)
-cd ../traefik
-docker compose up -d >/dev/null 2>&1 || docker-compose up -d >/dev/null 2>&1
+docker compose -f traefik.yml up -d >/dev/null 2>&1 || docker-compose -f traefik.yml up -d >/dev/null 2>&1
 echo -e "${GREEN}✓ Traefik iniciado${NC}"
 
 echo ""

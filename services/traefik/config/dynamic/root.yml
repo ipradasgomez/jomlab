@@ -10,13 +10,17 @@ http:
       service: root-page
       tls:
         certResolver: cloudflare
-      middlewares:
-        - error-handler  # Middleware aplicado automáticamente a routers Docker, necesario aquí para routers YAML
-      priority: 10  # Prioridad alta para que tenga precedencia sobre el catch-all
+        options: default
+      priority: 100  # Prioridad muy alta para que tenga precedencia sobre el catch-all
 
   services:
     root-page:
       loadBalancer:
         servers:
           - url: "http://root-page:80"
+        healthCheck:
+          path: /
+          interval: "10s"
+          timeout: "3s"
+          scheme: http
 

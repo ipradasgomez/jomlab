@@ -1,0 +1,29 @@
+# Configuración para whoami con autenticación Authentik
+# Servicio de prueba que muestra información de la petición HTTP
+
+http:
+  routers:
+    whoami:
+      rule: "Host(`whoami.tekkisma.es`)"
+      entryPoints:
+        - websecure
+      service: whoami
+      tls:
+        certResolver: cloudflare
+        options: default
+      middlewares:
+        - authentik-forward-auth  # Autenticación requerida (debe ir primero)
+        - error-handler  # Maneja errores del servicio (después de autenticación)
+      priority: 10  # Prioridad alta para que tenga precedencia sobre el catch-all
+
+  services:
+    whoami:
+      loadBalancer:
+        servers:
+          - url: "http://whoami:80"
+        healthCheck:
+          path: /
+          interval: "10s"
+          timeout: "3s"
+          scheme: http
+
