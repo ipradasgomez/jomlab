@@ -83,3 +83,4 @@ cd services/traefik && docker-compose up -d
 2. Datos persistentes en `data/`, nunca en `services/`
 3. Rutas relativas en docker-compose.yml
 4. Un servicio = un directorio completo
+5. **Reglas de Traefik**: Todas las reglas de routing de Traefik para aplicaciones deben ir en `services/traefik/config/dynamic/<servicio>.yml`, NO en labels de docker-compose

@@ -2,6 +2,10 @@
 
 Este directorio contiene configuraciones dinámicas de Traefik que se recargan automáticamente sin necesidad de reiniciar el servicio.
 
+## Regla Importante
+
+**Todas las reglas de routing de Traefik para aplicaciones deben ir en este directorio** (`services/traefik/config/dynamic/<servicio>.yml`), **NO en labels de docker-compose**.
+
 ## Uso
 
 Crea archivos `.yml` en este directorio con tus configuraciones dinámicas. Traefik los detectará y aplicará automáticamente.
