@@ -111,7 +111,9 @@ Ambos servicios usan la red `entry`:
 
 ## Añadir Servicios
 
-### Opción 1: Configuración Estática (Recomendado)
+### Configuración de Routing (Obligatorio)
+
+**IMPORTANTE**: Todas las reglas de routing de Traefik para aplicaciones deben ir en `services/traefik/config/dynamic/<servicio>.yml`, **NO en labels de docker-compose**.
 
 Crear archivo en `services/traefik/config/dynamic/servicio.yml`:
 
@@ -125,27 +127,15 @@ http:
       service: servicio
       tls:
         certResolver: cloudflare
+      middlewares:
+        - error-handler  # Si está disponible
+        - authentik-forward-auth  # Si requiere autenticación
 
   services:
     servicio:
       loadBalancer:
         servers:
-          - url: "http://servicio:80"
-```
-
-### Opción 2: Labels Docker (si el provider funciona)
-
-En `<servicio>.yml` del servicio (en `services/`):
-```yaml
-services:
-  servicio:
-    # ... configuración del servicio ...
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.servicio.rule=Host(`servicio.dominio.com`)"
-      - "traefik.http.routers.servicio.entrypoints=websecure"
-      - "traefik.http.routers.servicio.tls.certresolver=cloudflare"
-      - "traefik.http.services.servicio.loadbalancer.server.port=80"
+          - url: "http://servicio:80"  # Usar el nombre del contenedor y puerto interno
 ```
 
 ## Troubleshooting

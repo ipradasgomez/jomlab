@@ -39,6 +39,14 @@ Referencias y recursos utilizados en la configuración del homelab.
 - **Docker Compose**: https://docs.docker.com/compose/
 - **Let's Encrypt**: https://letsencrypt.org/
 
+## AdGuard Home
+
+### Documentación Oficial
+
+#### Preguntas Frecuentes
+- **FAQ de AdGuard Home**: https://adguard-dns.io/kb/es/adguard-home/faq/
+  - **Descripción**: Documentación oficial con preguntas frecuentes sobre AdGuard Home. Incluye información sobre problemas comunes como "bind: address already in use" relacionados con el DNS stub listener de systemd-resolved en Linux, configuración de reverse proxy, troubleshooting y más.
+
 ## Authentik
 
 ### Documentación Oficial
