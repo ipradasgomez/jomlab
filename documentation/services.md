@@ -151,6 +151,43 @@ Servidor DNS con bloqueo de anuncios.
 
 **Configuración**: Primera vez accede a `http://localhost:3000`
 
+### Home Assistant
+Sistema de automatización del hogar y control de dispositivos IoT.
+
+**Ubicación**: 
+- `services/home-assistant.yml` (docker-compose)
+- `services/home-assistant/config/` (archivos de configuración YAML versionados)
+- `services/traefik/config/dynamic/home-assistant.yml` (configuración de Traefik)
+
+**Función**:
+- Automatización del hogar
+- Control de dispositivos IoT
+- Integración con múltiples plataformas y dispositivos
+
+**Configuración**:
+- Variables en `.env`:
+  - `TZ`: Zona horaria (default: `UTC`)
+- Archivos de configuración en `services/home-assistant/config/`:
+  - `configuration.yaml` - Configuración principal
+  - `automations.yaml` - Automatizaciones
+  - `scripts.yaml` - Scripts
+  - `scenes.yaml` - Escenas
+  - `secrets.yaml` - Secretos (no versionar en git)
+- Datos persistentes (DB, logs, etc.) se generan en `services/home-assistant/config/` pero se ignoran con `.gitignore`
+- Primera vez accede a `https://home.tekkisma.es` para el onboarding inicial
+- Requiere modo `privileged` para acceso completo a dispositivos del sistema
+
+**Autenticación**: Requiere login mediante Authentik (protegido por `authentik-forward-auth` middleware)
+
+**Acceso**: `https://home.tekkisma.es`
+
+**Notas**:
+- El contenedor usa `privileged: true` para acceso completo a dispositivos (necesario para integraciones como Bluetooth, USB, etc.)
+- El volumen `/run/dbus` está montado en modo lectura para soporte de Bluetooth
+- Después del primer inicio, sigue el proceso de onboarding en la interfaz web
+
+**Ver logs**: `docker logs home-assistant`
+
 ## Añadir un Nuevo Servicio
 
 1. Crear directorio en `services/<servicio>/` para configuraciones

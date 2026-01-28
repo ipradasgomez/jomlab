@@ -1,0 +1,25 @@
+# Configuración del Dashboard de Traefik
+# Accesible en https://traefik.tekkisma.es con autenticación mediante Authentik
+
+http:
+  routers:
+    traefik-dashboard:
+      rule: "Host(`traefik.tekkisma.es`)"
+      entryPoints:
+        - websecure
+      service: traefik-dashboard-service
+      tls:
+        certResolver: cloudflare
+        options: default
+      middlewares:
+        - error-handler  # Necesario para routers definidos en archivos YAML
+        - authentik-forward-auth  # Autenticación mediante Authentik
+      priority: 100  # Prioridad alta
+
+  services:
+    traefik-dashboard-service:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.0.100:8080"  # IP del host donde está mapeado el puerto 8080
+
+

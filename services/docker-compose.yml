@@ -13,11 +13,16 @@ services:
       - ../.env
     networks:
       - entry
+      - apps
     restart: "no"
 
 networks:
   entry:
     name: entry
+    driver: bridge
+    external: false
+  apps:
+    name: apps
     driver: bridge
     external: false
 

@@ -19,7 +19,9 @@ services:
       - --entrypoints.websecure.address=:${TRAEFIK_HTTPS_PORT:-443}
       # API and Dashboard (dynamic)
       - --api.dashboard=${TRAEFIK_DASHBOARD_ENABLED:-true}
-      - --api.insecure=${TRAEFIK_API_INSECURE:-false}
+      - --api.insecure=true
+      # Habilitar API en entrypoint websecure para poder usar api@internal
+      - --api.entrypoint=websecure
       # TLS via Cloudflare DNS challenge (dynamic)
       - --certificatesresolvers.cloudflare.acme.dnschallenge=true
       - --certificatesresolvers.cloudflare.acme.dnschallenge.provider=cloudflare
@@ -39,16 +41,9 @@ services:
       - TZ=${TZ:-UTC}
     networks:
       - entry
+      - apps
     depends_on:
       - socket-proxy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.${MAIN_DOMAIN}`)"
-      - "traefik.http.routers.traefik.entrypoints=websecure"
-      - "traefik.http.routers.traefik.tls.certresolver=cloudflare"
-      - "traefik.http.routers.traefik.service=api@internal"
-      - "traefik.http.routers.traefik.middlewares=auth"
-      - "traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_BASIC_AUTH}"
 
   socket-proxy:
     image: tecnativa/docker-socket-proxy
@@ -70,5 +65,8 @@ services:
 networks:
   entry:
     name: entry
+    external: true
+  apps:
+    name: apps
     external: true
 

@@ -1,0 +1,24 @@
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# HTTP configuration for reverse proxy (Traefik)
+# Required when running behind a reverse proxy to avoid 400 Bad Request errors
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 172.18.0.0/16  # Red Docker entry (Traefik desde red de entrada)
+    - 172.20.0.0/16  # Red Docker apps (Traefik desde red de aplicaciones)
+    - 127.0.0.1
+    - ::1
+  # Configuración de seguridad
+  ip_ban_enabled: true
+  login_attempts_threshold: 5
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
