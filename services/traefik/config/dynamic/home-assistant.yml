@@ -1,0 +1,28 @@
+# Configuración para Home Assistant con autenticación Authentik
+# Sistema de automatización del hogar
+
+http:
+  routers:
+    home-assistant:
+      rule: "Host(`home.tekkisma.es`)"
+      entryPoints:
+        - websecure
+      service: home-assistant
+      tls:
+        certResolver: cloudflare
+        options: default
+      middlewares:
+        - authentik-forward-auth  # Autenticación requerida (debe ir primero)
+      priority: 50  # Prioridad alta para que tenga precedencia sobre el catch-all y otros servicios
+
+  services:
+    home-assistant:
+      loadBalancer:
+        servers:
+          - url: "http://home-assistant:8123"
+        healthCheck:
+          path: /
+          interval: "10s"
+          timeout: "3s"
+          scheme: http
+

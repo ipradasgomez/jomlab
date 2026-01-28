@@ -1,0 +1,31 @@
+services:
+  home-assistant:
+    container_name: home-assistant
+    image: ghcr.io/home-assistant/home-assistant:stable
+    volumes:
+      # configuration.yaml versionado desde services/
+      - ./home-assistant/config/configuration.yaml:/config-config/configuration.yaml:ro
+      # Todo en /config (configuraciones YAML + datos persistentes)
+      - ../data/home-assistant:/config
+      # Zona horaria del sistema (del ejemplo oficial)
+      - /etc/localtime:/etc/localtime:ro
+      # D-Bus para Bluetooth
+      - /run/dbus:/run/dbus:ro
+    entrypoint: /bin/sh
+    command: -c "if [ ! -f /config/configuration.yaml ] || [ /config-config/configuration.yaml -nt /config/configuration.yaml ]; then cp /config-config/configuration.yaml /config/configuration.yaml && echo 'Copied configuration.yaml to /config'; fi; exec /init"
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - apps
+    env_file:
+      - ./.env
+    environment:
+      - TZ=${TZ:-UTC}
+    labels:
+      - "traefik.enable=true"
+
+networks:
+  apps:
+    name: apps
+    external: true
+
