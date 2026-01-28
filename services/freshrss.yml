@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  freshrss:
+    image: freshrss/freshrss:latest
+    container_name: freshrss
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    environment:
+      # Zona horaria
+      TZ: ${TZ:-Europe/Madrid}
+      # Cron para actualización de feeds (configurable desde .env)
+      CRON_MIN: ${FRESHRSS_CRON_MIN:-*/20}
+      # Auto-instalación en el primer arranque
+      # Parámetros solo se usan la primera vez
+      FRESHRSS_INSTALL: |-
+        --api-enabled
+        --base-url ${FRESHRSS_BASE_URL}
+        --db-base ${FRESHRSS_PG_DB:-freshrss}
+        --db-host storage-postgresql
+        --db-password ${POSTGRES_PASSWORD}
+        --db-type pgsql
+        --db-user ${POSTGRES_USER:-postgres}
+        --default-user ${FRESHRSS_DEFAULT_USER:-admin}
+        --language es
+      # Configuración del usuario admin en el primer arranque
+      FRESHRSS_USER: |-
+        --api-password ${FRESHRSS_ADMIN_API_PASSWORD}
+        --email ${FRESHRSS_ADMIN_EMAIL}
+        --language es
+        --password ${FRESHRSS_ADMIN_PASSWORD}
+        --user ${FRESHRSS_DEFAULT_USER:-admin}
+    volumes:
+      # Datos persistentes (configuración, SQLite si se usa, etc.)
+      - ../data/freshrss/data:/var/www/FreshRSS/data
+      # Extensiones de terceros (opcional)
+      - ../data/freshrss/extensions:/var/www/FreshRSS/extensions
+    networks:
+      - apps
+      - storage
+    labels:
+      - "traefik.enable=true"
+    healthcheck:
+      test: ["CMD", "cli/health.php"]
+      timeout: 10s
+      start_period: 60s
+      start_interval: 11s
+      interval: 75s
+      retries: 3
+
+networks:
+  apps:
+    name: apps
+    external: true
+  storage:
+    name: storage
+    external: true
