@@ -1,0 +1,43 @@
+# Configuración para FreshRSS con autenticación Authentik en panel web
+# API abierta para apps móviles (autenticación propia de FreshRSS)
+
+http:
+  routers:
+    # Router para API de FreshRSS (sin protección Authentik)
+    # Apps móviles acceden vía /api/greader.php o /api/fever.php
+    freshrss-api:
+      rule: "Host(`rss.tekkisma.es`) && PathPrefix(`/api`)"
+      entryPoints:
+        - websecure
+      service: freshrss
+      tls:
+        certResolver: cloudflare
+        options: default
+      middlewares:
+        - error-handler  # Solo manejo de errores, sin autenticación
+      priority: 20  # Prioridad alta para que se evalúe antes que freshrss-web
+
+    # Router para panel web de FreshRSS (con protección Authentik)
+    freshrss-web:
+      rule: "Host(`rss.tekkisma.es`)"
+      entryPoints:
+        - websecure
+      service: freshrss
+      tls:
+        certResolver: cloudflare
+        options: default
+      middlewares:
+        - authentik-forward-auth  # Autenticación requerida para panel web
+        - error-handler  # Maneja errores del servicio
+      priority: 10  # Prioridad normal, se evalúa después de freshrss-api
+
+  services:
+    freshrss:
+      loadBalancer:
+        servers:
+          - url: "http://freshrss:80"
+        healthCheck:
+          path: /
+          interval: "10s"
+          timeout: "3s"
+          scheme: http
