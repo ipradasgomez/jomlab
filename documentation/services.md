@@ -188,6 +188,77 @@ Sistema de automatización del hogar y control de dispositivos IoT.
 
 **Ver logs**: `docker logs home-assistant`
 
+### FreshRSS
+Lector de feeds RSS/Atom autoalojado con soporte para múltiples usuarios y sincronización con apps móviles.
+
+**Ubicación**: 
+- `services/freshrss.yml` (docker-compose)
+- `services/traefik/config/dynamic/freshrss.yml` (configuración de Traefik)
+- `data/freshrss/data/` (datos persistentes)
+- `data/freshrss/extensions/` (extensiones de terceros)
+
+**Función**:
+- Agregador de feeds RSS/Atom
+- Sincronización con apps móviles vía Google Reader API
+- Actualización automática de feeds mediante cron
+- Usa PostgreSQL compartido para almacenamiento
+
+**Configuración**:
+- Variables requeridas en `.env`:
+  - `FRESHRSS_BASE_URL`: URL completa (ej: `https://rss.tekkisma.es`)
+  - `FRESHRSS_CRON_MIN`: Frecuencia de actualización de feeds (default: `*/20` cada 20 min)
+  - `FRESHRSS_DEFAULT_USER`: Nombre del usuario admin (default: `admin`)
+  - `FRESHRSS_ADMIN_EMAIL`: Email del administrador
+  - `FRESHRSS_ADMIN_PASSWORD`: Contraseña del panel web
+  - `FRESHRSS_ADMIN_API_PASSWORD`: Contraseña para apps móviles (diferente a la web)
+  - `FRESHRSS_PG_DB`: Nombre de la base de datos (default: `freshrss`)
+- Usa PostgreSQL compartido (`storage-postgresql`) con credenciales: `POSTGRES_USER`, `POSTGRES_PASSWORD`
+- La base de datos se crea automáticamente en el primer arranque
+
+**Requisitos**: PostgreSQL debe estar corriendo antes de iniciar FreshRSS:
+```bash
+cd services
+docker compose -f storage-postgresql.yml up -d
+docker compose -f freshrss.yml up -d
+```
+
+**Acceso web**: `https://rss.tekkisma.es`
+
+**Autenticación**: 
+- **Panel web**: Requiere login mediante Authentik (protegido por `authentik-forward-auth` middleware)
+- **API móvil** (`/api/*`): Sin protección de Authentik, usa autenticación propia de FreshRSS
+
+**Configuración de apps móviles**:
+1. En el panel web de FreshRSS, activar "Allow API access" en Settings > Authentication
+2. En tu perfil, configurar un "API password" (puede ser diferente a tu contraseña web)
+3. En la app móvil, configurar:
+   - **Tipo**: Google Reader API (recomendado) o Fever API
+   - **URL**: `https://rss.tekkisma.es`
+   - **Usuario**: `admin` (o el configurado en `FRESHRSS_DEFAULT_USER`)
+   - **Contraseña**: El `API password` configurado en FreshRSS (o `FRESHRSS_ADMIN_API_PASSWORD`)
+
+**Apps móviles compatibles**:
+- **Android**: News+, FeedMe, EasyRSS, Readrops, Read You, FocusReader
+- **iOS/macOS**: Reeder, lire, NetNewsWire, Unread, Fiery Feeds
+- **Desktop**: Newsboat, Newsflash, Fluent Reader
+
+**Actualización de feeds**:
+- Automática mediante cron interno del contenedor
+- Frecuencia configurable en `.env` con `FRESHRSS_CRON_MIN`:
+  - `*/20` - Cada 20 minutos (recomendado)
+  - `3,33` - A los 3 y 33 minutos de cada hora (cada 30 min)
+  - `7` - A los 7 minutos de cada hora (cada hora)
+  - Cualquier expresión cron válida para minutos
+
+**Ver logs**: `docker logs freshrss`
+
+**Notas**:
+- Primera instalación automática usando parámetros de `FRESHRSS_INSTALL`
+- La API (`/api/greader.php`, `/api/fever.php`) no requiere Authentik, solo el API password de FreshRSS
+- Panel web requiere login vía Authentik primero, luego login de FreshRSS
+- Datos persistentes en `data/freshrss/data/`
+- Extensiones de terceros en `data/freshrss/extensions/`
+
 ## Añadir un Nuevo Servicio
 
 1. Crear directorio en `services/<servicio>/` para configuraciones

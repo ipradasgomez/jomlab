@@ -188,6 +188,65 @@ Todas las variables de AdGuard Home tienen valores por defecto y son opcionales.
 
 ---
 
+### FreshRSS
+
+FreshRSS es un lector de feeds RSS/Atom autoalojado. Utiliza la base de datos PostgreSQL compartida.
+
+#### `FRESHRSS_BASE_URL`
+- **Descripción**: URL completa donde se accede a FreshRSS
+- **Ejemplo**: `https://rss.tekkisma.es`
+- **Uso**: Configura la URL base del servicio
+- **Requerido**: Sí
+
+#### `FRESHRSS_CRON_MIN`
+- **Descripción**: Minutos del cron para actualización automática de feeds
+- **Valores posibles**: 
+  - `*/20` - Cada 20 minutos (recomendado)
+  - `3,33` - A los 3 y 33 minutos de cada hora (cada 30 min)
+  - `7` - A los 7 minutos de cada hora (cada hora)
+  - Cualquier expresión cron válida para minutos
+- **Por defecto**: `*/20`
+- **Uso**: Controla la frecuencia de actualización de feeds RSS
+- **Requerido**: No (si no se especifica, se actualiza cada 20 minutos)
+
+#### `FRESHRSS_DEFAULT_USER`
+- **Descripción**: Nombre del usuario administrador principal
+- **Ejemplo**: `admin`
+- **Por defecto**: `admin`
+- **Uso**: Usuario creado automáticamente durante la instalación
+- **Requerido**: Sí
+
+#### `FRESHRSS_ADMIN_EMAIL`
+- **Descripción**: Email del usuario administrador
+- **Ejemplo**: `tu@email.com`
+- **Uso**: Email asociado a la cuenta de administrador
+- **Requerido**: Sí
+
+#### `FRESHRSS_ADMIN_PASSWORD`
+- **Descripción**: Contraseña del usuario administrador
+- **Ejemplo**: Contraseña segura (mínimo 8 caracteres)
+- **Uso**: Contraseña para acceder al panel web de FreshRSS
+- **Requerido**: Sí
+- **Seguridad**: Usa una contraseña fuerte y única
+
+#### `FRESHRSS_ADMIN_API_PASSWORD`
+- **Descripción**: Contraseña API para apps móviles
+- **Ejemplo**: Contraseña segura diferente a la principal
+- **Uso**: Contraseña específica para autenticación desde apps móviles (Google Reader API)
+- **Requerido**: Sí (si usas apps móviles)
+- **Seguridad**: Debe ser diferente a `FRESHRSS_ADMIN_PASSWORD`
+- **Nota**: Configura en apps móviles junto con `FRESHRSS_BASE_URL` y `FRESHRSS_DEFAULT_USER`
+
+#### `FRESHRSS_PG_DB`
+- **Descripción**: Nombre de la base de datos en PostgreSQL
+- **Ejemplo**: `freshrss`
+- **Por defecto**: `freshrss`
+- **Uso**: Base de datos que se crea automáticamente en el PostgreSQL compartido
+- **Requerido**: No (usa el valor por defecto si no se especifica)
+- **Nota**: El usuario `postgres` tiene permisos para crear esta base de datos automáticamente
+
+---
+
 ## Orden de Configuración Recomendado
 
 1. **Variables básicas** (mínimo para empezar):
@@ -207,6 +266,7 @@ Todas las variables de AdGuard Home tienen valores por defecto y son opcionales.
 
 5. **Variables de servicios** (según necesites):
    - Variables de AdGuard Home (si usas AdGuard Home)
+   - Variables de FreshRSS (si usas FreshRSS)
 
 ---
 

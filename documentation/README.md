@@ -9,6 +9,7 @@ Documentación completa del sistema homelab.
 - **[Infraestructura de Entrada](infrastructure.md)** - Cloudflare Tunnel + Traefik
 - **[Estructura de Directorios](directory-structure.md)** - Organización del proyecto
 - **[Servicios](services.md)** - Documentación de servicios individuales
+- **[Instalar un servicio](instalar-servicio.md)** - Resumen de pasos para añadir un nuevo servicio
 
 ## Convenciones
 
