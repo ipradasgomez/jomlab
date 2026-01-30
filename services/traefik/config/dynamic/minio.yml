@@ -1,0 +1,47 @@
+http:
+  routers:
+    # MinIO API S3 (acceso público para apps - sin Authentik)
+    minio-api:
+      rule: "Host(`s3.tekkisma.es`)"
+      entryPoints:
+        - websecure
+      service: minio-api
+      tls:
+        certResolver: cloudflare
+      middlewares:
+        - error-handler
+      priority: 10
+
+    # MinIO Console (acceso admin protegido con Authentik)
+    minio-console:
+      rule: "Host(`storage.tekkisma.es`)"
+      entryPoints:
+        - websecure
+      service: minio-console
+      tls:
+        certResolver: cloudflare
+      middlewares:
+        - authentik-forward-auth
+        - error-handler
+      priority: 10
+
+  services:
+    # MinIO API S3 (puerto 9000)
+    minio-api:
+      loadBalancer:
+        servers:
+          - url: "http://storage-minio:9000"
+        healthCheck:
+          path: "/minio/health/live"
+          interval: "30s"
+          timeout: "10s"
+
+    # MinIO Console (puerto 9001)
+    minio-console:
+      loadBalancer:
+        servers:
+          - url: "http://storage-minio:9001"
+        healthCheck:
+          path: "/"
+          interval: "30s"
+          timeout: "10s"

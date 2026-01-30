@@ -1,0 +1,18 @@
+http:
+  routers:
+    splitpro:
+      rule: "Host(`split.tekkisma.es`)"
+      entryPoints:
+        - websecure
+      service: splitpro
+      tls:
+        certResolver: cloudflare
+      middlewares:
+        - error-handler
+      priority: 10
+
+  services:
+    splitpro:
+      loadBalancer:
+        servers:
+          - url: "http://splitpro:3000"

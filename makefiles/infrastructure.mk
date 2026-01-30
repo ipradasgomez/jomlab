@@ -18,42 +18,57 @@ help: ## Muestra esta ayuda
 	@echo "$(GREEN)Comandos disponibles:$(NC)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-15s$(NC) %s\n", $$1, $$2}'
 
-start: ## Inicia la infraestructura de entrada (red común, traefik con socket-proxy, cloudflared, adguardhome)
-	@echo "$(GREEN)Iniciando infraestructura de entrada...$(NC)"
+start: ## Inicia la infraestructura completa (redes, storage, traefik, cloudflared, adguardhome)
+	@echo "$(GREEN)Iniciando infraestructura completa...$(NC)"
 	@if [ ! -f $(ENV_FILE) ]; then \
 		echo "$(RED)Error: Archivo .env no encontrado. Copia env.example a .env y configura las variables.$(NC)"; \
 		exit 1; \
 	fi
-	@echo "$(YELLOW)1. Creando red común 'entry'...$(NC)"
+	@echo "$(YELLOW)1. Creando redes comunes...$(NC)"
 	@cd $(SERVICES_DIR) && docker-compose up -d network-dummy || docker compose up -d network-dummy
-	@echo "$(YELLOW)2. Iniciando Traefik (con socket-proxy)...$(NC)"
+	@echo "$(YELLOW)2. Iniciando Storage (PostgreSQL, Redis, MinIO)...$(NC)"
+	@cd $(SERVICES_DIR) && docker-compose -f storage-postgresql.yml up -d || docker compose -f storage-postgresql.yml up -d
+	@cd $(SERVICES_DIR) && docker-compose -f storage-redis.yml up -d || docker compose -f storage-redis.yml up -d
+	@cd $(SERVICES_DIR) && docker-compose -f storage-minio.yml up -d || docker compose -f storage-minio.yml up -d
+	@echo "$(YELLOW)3. Iniciando Traefik (con socket-proxy)...$(NC)"
 	@cd $(SERVICES_DIR) && docker-compose -f traefik.yml up -d || docker compose -f traefik.yml up -d
-	@echo "$(YELLOW)3. Iniciando Cloudflare Tunnel...$(NC)"
+	@echo "$(YELLOW)4. Iniciando Cloudflare Tunnel...$(NC)"
 	@cd $(SERVICES_DIR) && docker-compose -f cloudflared.yml up -d || docker compose -f cloudflared.yml up -d
-	@echo "$(YELLOW)4. Iniciando AdGuard Home...$(NC)"
+	@echo "$(YELLOW)5. Iniciando AdGuard Home...$(NC)"
 	@cd $(SERVICES_DIR) && docker-compose -f adguardhome.yml up -d || docker compose -f adguardhome.yml up -d
-	@echo "$(GREEN)✓ Infraestructura de entrada iniciada$(NC)"
-	@echo "$(GREEN)  - Red: entry$(NC)"
+	@echo "$(GREEN)✓ Infraestructura completa iniciada$(NC)"
+	@echo "$(GREEN)  - Redes: entry, storage, apps$(NC)"
+	@echo "$(GREEN)  - Storage: PostgreSQL, Redis, MinIO$(NC)"
 	@echo "$(GREEN)  - Traefik: traefik (con socket-proxy)$(NC)"
 	@echo "$(GREEN)  - Cloudflare Tunnel: cloudflared$(NC)"
 	@echo "$(GREEN)  - AdGuard Home: adguardhome$(NC)"
 
-stop: ## Detiene todos los servicios de la infraestructura de entrada
-	@echo "$(YELLOW)Deteniendo infraestructura de entrada...$(NC)"
+stop: ## Detiene todos los servicios de la infraestructura
+	@echo "$(YELLOW)Deteniendo infraestructura completa...$(NC)"
 	@cd $(SERVICES_DIR) && docker-compose -f adguardhome.yml down || docker compose -f adguardhome.yml down
 	@cd $(SERVICES_DIR) && docker-compose -f cloudflared.yml down || docker compose -f cloudflared.yml down
 	@cd $(SERVICES_DIR) && docker-compose -f traefik.yml down || docker compose -f traefik.yml down
+	@cd $(SERVICES_DIR) && docker-compose -f storage-minio.yml down || docker compose -f storage-minio.yml down
+	@cd $(SERVICES_DIR) && docker-compose -f storage-redis.yml down || docker compose -f storage-redis.yml down
+	@cd $(SERVICES_DIR) && docker-compose -f storage-postgresql.yml down || docker compose -f storage-postgresql.yml down
 	@echo "$(GREEN)✓ Servicios detenidos$(NC)"
 
 restart: stop start ## Reinicia la infraestructura de entrada
 
 status: ## Muestra el estado de los servicios
-	@echo "$(GREEN)Estado de los servicios:$(NC)"
+	@echo "$(GREEN)Estado de la infraestructura:$(NC)"
 	@echo ""
-	@echo "$(YELLOW)Red 'entry':$(NC)"
+	@echo "$(YELLOW)Redes:$(NC)"
 	@docker network inspect entry >/dev/null 2>&1 && echo "$(GREEN)  ✓ Red 'entry' existe$(NC)" || echo "$(RED)  ✗ Red 'entry' no existe$(NC)"
+	@docker network inspect storage >/dev/null 2>&1 && echo "$(GREEN)  ✓ Red 'storage' existe$(NC)" || echo "$(RED)  ✗ Red 'storage' no existe$(NC)"
+	@docker network inspect apps >/dev/null 2>&1 && echo "$(GREEN)  ✓ Red 'apps' existe$(NC)" || echo "$(RED)  ✗ Red 'apps' no existe$(NC)"
 	@echo ""
-	@echo "$(YELLOW)Contenedores:$(NC)"
+	@echo "$(YELLOW)Storage:$(NC)"
+	@docker ps --filter "name=storage-postgresql" --format "  {{.Names}}: {{.Status}}" || echo "  storage-postgresql: no está corriendo"
+	@docker ps --filter "name=storage-redis" --format "  {{.Names}}: {{.Status}}" || echo "  storage-redis: no está corriendo"
+	@docker ps --filter "name=storage-minio" --format "  {{.Names}}: {{.Status}}" || echo "  storage-minio: no está corriendo"
+	@echo ""
+	@echo "$(YELLOW)Infraestructura de entrada:$(NC)"
 	@docker ps --filter "name=socket-proxy" --format "  {{.Names}}: {{.Status}}" || echo "  socket-proxy: no está corriendo"
 	@docker ps --filter "name=traefik" --format "  {{.Names}}: {{.Status}}" || echo "  traefik: no está corriendo"
 	@docker ps --filter "name=cloudflared" --format "  {{.Names}}: {{.Status}}" || echo "  cloudflared: no está corriendo"

@@ -1,0 +1,75 @@
+# SplitPro - Gestión de gastos compartidos
+
+services:
+  splitpro:
+    image: ossapps/splitpro:latest
+    container_name: splitpro
+    restart: unless-stopped
+    networks:
+      - entry
+      - storage
+    env_file:
+      - ./.env
+    environment:
+      # Aceptar certificado de auth.tekkisma.es (homelab/Cloudflare)
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+      # Database Configuration (using shared PostgreSQL)
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD_ENCODED}@storage-postgresql:5432/${SPLITPRO_PG_DB}
+      
+      # NextAuth Configuration
+      - NEXTAUTH_SECRET=${SPLITPRO_NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${SPLITPRO_BASE_URL}
+      
+      # Application Configuration (0.0.0.0 so Traefik on entry network can reach it)
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+      - DEFAULT_HOMEPAGE=${SPLITPRO_DEFAULT_HOMEPAGE:-/balances}
+      - ENABLE_SENDING_INVITES=${SPLITPRO_ENABLE_INVITES:-true}
+      - DISABLE_EMAIL_SIGNUP=${SPLITPRO_DISABLE_EMAIL_SIGNUP:-false}
+      
+      # Storage Configuration (S3-compatible for receipts/bills)
+      - R2_ACCESS_KEY=${SPLITPRO_R2_ACCESS_KEY}
+      - R2_SECRET_KEY=${SPLITPRO_R2_SECRET_KEY}
+      - R2_BUCKET=${SPLITPRO_R2_BUCKET:-splitpro}
+      - R2_URL=${SPLITPRO_R2_URL}
+      - R2_PUBLIC_URL=${SPLITPRO_R2_PUBLIC_URL}
+      
+      # Authentication Providers
+      - GOOGLE_CLIENT_ID=${SPLITPRO_GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${SPLITPRO_GOOGLE_CLIENT_SECRET:-}
+      
+      # Authentik SSO Integration
+      - AUTHENTIK_ID=${SPLITPRO_AUTHENTIK_ID}
+      - AUTHENTIK_SECRET=${SPLITPRO_AUTHENTIK_SECRET}
+      - AUTHENTIK_ISSUER=${SPLITPRO_AUTHENTIK_ISSUER}
+      
+      # Email Configuration (optional)
+      - FROM_EMAIL=${SPLITPRO_FROM_EMAIL}
+      - EMAIL_SERVER_HOST=${SPLITPRO_EMAIL_HOST}
+      - EMAIL_SERVER_PORT=${SPLITPRO_EMAIL_PORT}
+      - EMAIL_SERVER_USER=${SPLITPRO_EMAIL_USER}
+      - EMAIL_SERVER_PASSWORD=${SPLITPRO_EMAIL_PASSWORD}
+      
+      # Push Notifications (optional)
+      - WEB_PUSH_PRIVATE_KEY=${SPLITPRO_WEB_PUSH_PRIVATE_KEY}
+      - WEB_PUSH_PUBLIC_KEY=${SPLITPRO_WEB_PUSH_PUBLIC_KEY}
+      - WEB_PUSH_EMAIL=${SPLITPRO_WEB_PUSH_EMAIL}
+      
+      # Currency Rate Provider
+      - CURRENCY_RATE_PROVIDER=${SPLITPRO_CURRENCY_PROVIDER:-frankfurter}
+      - OPEN_EXCHANGE_RATES_APP_ID=${SPLITPRO_OXR_APP_ID}
+      
+      # Cleanup Configuration
+      - CLEAR_CACHE_CRON_RULE=${SPLITPRO_CACHE_CRON:-0 2 * * 0}
+      - CACHE_RETENTION_INTERVAL=${SPLITPRO_CACHE_RETENTION:-2 days}
+    
+    labels:
+      - "traefik.enable=true"
+
+networks:
+  entry:
+    name: entry
+    external: true
+  storage:
+    name: storage
+    external: true

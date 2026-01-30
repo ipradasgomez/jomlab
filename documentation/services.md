@@ -50,11 +50,27 @@ Cache y cola de mensajes Redis compartida para todos los servicios que la requie
 
 **Ver logs**: `docker logs storage-redis`
 
-**Nota**: Los servicios de almacenamiento deben iniciarse antes que los servicios que los usan:
+### MinIO
+Servidor S3-compatible self-hosted para almacenamiento de objetos.
+
+**Ubicación**: `services/storage-minio.yml`
+
+**URLs**:
+- API S3: `https://s3.tekkisma.es` (pública) / `http://storage-minio:9000` (interna)
+- Console: `https://storage.tekkisma.es` (protegida con Authentik)
+
+**Configuración**:
+- `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MINIO_BROWSER`, `MINIO_DOMAIN`
+- Datos en `data/storage/minio/`
+
+**Uso**: Crear buckets desde la consola web, configurar políticas de acceso
+
+**Iniciar servicios de almacenamiento**:
 ```bash
 cd services
 docker compose -f storage-postgresql.yml up -d
 docker compose -f storage-redis.yml up -d
+docker compose -f storage-minio.yml up -d
 ```
 
 ## Servicios de Infraestructura
@@ -258,6 +274,28 @@ docker compose -f freshrss.yml up -d
 - Panel web requiere login vía Authentik primero, luego login de FreshRSS
 - Datos persistentes en `data/freshrss/data/`
 - Extensiones de terceros en `data/freshrss/extensions/`
+
+### SplitPro
+Gestión de gastos compartidos (alternativa a Splitwise).
+
+**Ubicación**: `services/splitpro.yml`
+
+**Función**: Dividir gastos, gestión de grupos, multi-moneda, subir recibos, PWA
+
+**Configuración**:
+- Base: `SPLITPRO_BASE_URL`, `SPLITPRO_PG_DB`, `SPLITPRO_NEXTAUTH_SECRET`
+- Storage S3 (requerido): `SPLITPRO_R2_*` variables (MinIO local o cloud)
+- OAuth (requerido): Google OAuth o Authentik SSO
+- Opcionales: email, push notifications, currency provider
+
+**Requisitos**:
+1. PostgreSQL compartido corriendo
+2. MinIO corriendo con bucket `splitpro` creado (política `download`)
+3. OAuth configurado (Google o Authentik)
+
+**Acceso**: `https://split.tekkisma.es` (protegido con Authentik)
+
+**Ver**: `VARIABLES_SPLITPRO_MINIO.env` para configuración completa lista
 
 ## Añadir un Nuevo Servicio
 

@@ -247,6 +247,106 @@ FreshRSS es un lector de feeds RSS/Atom autoalojado. Utiliza la base de datos Po
 
 ---
 
+### Storage Services (PostgreSQL y Redis)
+
+PostgreSQL y Redis son servicios compartidos que otros servicios pueden utilizar.
+
+#### `POSTGRES_USER`
+- **Descripción**: Usuario de PostgreSQL
+- **Ejemplo**: `postgres`
+- **Por defecto**: `postgres`
+- **Uso**: Usuario con permisos de superusuario en PostgreSQL
+- **Requerido**: Sí
+- **Nota**: Este usuario tiene permisos para crear bases de datos automáticamente
+
+#### `POSTGRES_PASSWORD`
+- **Descripción**: Contraseña del usuario de PostgreSQL
+- **Ejemplo**: Generar con `openssl rand -base64 36`
+- **Uso**: Contraseña para conectarse a PostgreSQL
+- **Requerido**: Sí
+- **Seguridad**: Usa una contraseña fuerte generada aleatoriamente
+
+#### `POSTGRES_DB`
+- **Descripción**: Base de datos principal de PostgreSQL
+- **Ejemplo**: `shared`
+- **Por defecto**: `shared`
+- **Uso**: Base de datos principal (otros servicios pueden crear sus propias bases de datos)
+- **Requerido**: No
+
+#### `REDIS_PASSWORD`
+- **Descripción**: Contraseña de Redis
+- **Ejemplo**: Generar con `openssl rand -base64 36`
+- **Uso**: Contraseña para conectarse a Redis
+- **Requerido**: Sí
+- **Seguridad**: Usa una contraseña fuerte generada aleatoriamente
+
+#### MinIO
+
+- `MINIO_ROOT_USER`: Usuario admin (default: `admin`)
+- `MINIO_ROOT_PASSWORD`: Contraseña (generar con `openssl rand -base64 36`)
+- `MINIO_BROWSER`: Habilitar interfaz web (`on`/`off`)
+- `MINIO_DOMAIN`: Dominio para buckets (ej: `s3.tekkisma.es`)
+
+---
+
+### Authentik
+
+Authentik es el sistema de autenticación SSO utilizado en el homelab.
+
+#### `AUTHENTIK_SECRET_KEY`
+- **Descripción**: Clave secreta para Authentik
+- **Ejemplo**: Generar con `openssl rand -base64 60`
+- **Uso**: Clave secreta para cifrado y sesiones en Authentik
+- **Requerido**: Sí
+- **Seguridad**: Debe ser una cadena aleatoria de al menos 50 caracteres
+
+#### `AUTHENTIK_PG_DB`
+- **Descripción**: Nombre de la base de datos de Authentik en PostgreSQL
+- **Ejemplo**: `authentik`
+- **Por defecto**: `authentik`
+- **Uso**: Base de datos creada automáticamente en PostgreSQL compartido
+- **Requerido**: No (usa el valor por defecto)
+
+#### Variables de Email (Opcional)
+
+Si quieres que Authentik envíe emails (recuperación de contraseña, notificaciones):
+
+- `AUTHENTIK_EMAIL__HOST`: Servidor SMTP (ej: `smtp.gmail.com`)
+- `AUTHENTIK_EMAIL__FROM`: Email remitente (ej: `authentik@tudominio.com`)
+- `AUTHENTIK_EMAIL__USERNAME`: Usuario SMTP
+- `AUTHENTIK_EMAIL__PASSWORD`: Contraseña SMTP
+- `AUTHENTIK_EMAIL__USE_TLS`: `true` para TLS
+- `AUTHENTIK_EMAIL__USE_SSL`: `false` para TLS
+- `AUTHENTIK_EMAIL__PORT`: Puerto SMTP (ej: `587` para TLS, `465` para SSL)
+
+---
+
+### SplitPro
+
+Gestión de gastos compartidos.
+
+#### Variables Básicas (Requeridas)
+- `SPLITPRO_BASE_URL`: URL completa (ej: `https://split.tekkisma.es`)
+- `SPLITPRO_PG_DB`: Base de datos PostgreSQL (default: `splitpro`)
+- `SPLITPRO_NEXTAUTH_SECRET`: Secret key (generar con `openssl rand -base64 32`)
+
+#### Storage S3 (Requerido para recibos)
+- `SPLITPRO_R2_ACCESS_KEY`, `SPLITPRO_R2_SECRET_KEY`, `SPLITPRO_R2_BUCKET`
+- `SPLITPRO_R2_URL`: Endpoint S3 (ej: `http://storage-minio:9000`)
+- `SPLITPRO_R2_PUBLIC_URL`: URL pública (ej: `https://s3.tudominio.com/splitpro`)
+
+#### OAuth (Requerido - al menos uno)
+- Google: `SPLITPRO_GOOGLE_CLIENT_ID`, `SPLITPRO_GOOGLE_CLIENT_SECRET`
+- O Authentik: `SPLITPRO_AUTHENTIK_ID`, `SPLITPRO_AUTHENTIK_SECRET`, `SPLITPRO_AUTHENTIK_ISSUER`
+
+#### Opcionales
+- `SPLITPRO_DEFAULT_HOMEPAGE`, `SPLITPRO_ENABLE_INVITES`, `SPLITPRO_CURRENCY_PROVIDER`
+- Email SMTP, Web Push, cache settings
+
+**Ver `VARIABLES_SPLITPRO_MINIO.env` para configuración completa**
+
+---
+
 ## Orden de Configuración Recomendado
 
 1. **Variables básicas** (mínimo para empezar):
@@ -264,9 +364,17 @@ FreshRSS es un lector de feeds RSS/Atom autoalojado. Utiliza la base de datos Po
 4. **Variables de Traefik** (después de generar credenciales):
    - `TRAEFIK_BASIC_AUTH` (generar con el script)
 
-5. **Variables de servicios** (según necesites):
-   - Variables de AdGuard Home (si usas AdGuard Home)
-   - Variables de FreshRSS (si usas FreshRSS)
+5. **Variables de almacenamiento compartido**:
+   - `POSTGRES_USER`, `POSTGRES_PASSWORD` (generar con `openssl rand -base64 36`)
+   - `REDIS_PASSWORD` (generar con `openssl rand -base64 36`)
+   - `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` (si usas MinIO)
+
+6. **Variables de Authentik** (si usas SSO):
+   - `AUTHENTIK_SECRET_KEY` (generar con `openssl rand -base64 60`)
+   - `AUTHENTIK_PG_DB`
+
+7. **Variables de servicios**:
+   - SplitPro, FreshRSS, AdGuard Home, etc.
 
 ---
 
